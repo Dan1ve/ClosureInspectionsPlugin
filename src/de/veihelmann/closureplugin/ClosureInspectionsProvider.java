@@ -12,7 +12,7 @@ public class ClosureInspectionsProvider implements InspectionToolProvider {
     public Class[] getInspectionClasses() {
         return new Class[]{MissingOrObsoleteGoogRequiresInspection.class,
 
-                // Disabled (for now):
+                // TODO: Disabled (for now):
                 // ConvertToES6ClassInspection.class
         };
     }
