@@ -22,7 +22,7 @@ public class GoogInheritsDependencyRecognizer extends StaticMethodOrConstantDepe
         // [1] JSArgumentsList
         // [1] JSReferenceExpression : nth-of-type(2) : text
 
-        if (!isStaticMethodCall(callElement) || !callElement.getFirstChild().getText().equals("goog.inherits")) {
+        if (!isStaticMethodCall(callElement) || !normalizeNamespace(callElement.getFirstChild().getText()).equals("goog.inherits")) {
             return false;
         }
 
@@ -36,7 +36,7 @@ public class GoogInheritsDependencyRecognizer extends StaticMethodOrConstantDepe
             }
 
             if (alreadySawOneReference) {
-                dependencies.put(argument.getText(), argument);
+                dependencies.put(normalizeNamespace(argument.getText()), argument);
                 return true;
             }
             alreadySawOneReference = true;

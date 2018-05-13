@@ -7,6 +7,7 @@ import com.intellij.psi.PsiComment;
 
 import java.util.*;
 
+import static de.veihelmann.closureplugin.dependency_recognizers.DependencyRecognizerBase.normalizeNamespace;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
@@ -46,7 +47,10 @@ public class CommentDependencyCollector {
         for (JSDocTag tag : relevantTags) {
 
             Optional<String> typeReferences = extractClosureTypeReference(tag.getValue());
-            typeReferences.ifPresent(rawTypesInComments::add);
+            typeReferences.ifPresent(reference -> {
+                reference = normalizeNamespace(reference);
+                rawTypesInComments.add(reference);
+            });
         }
     }
 

@@ -22,7 +22,7 @@ public class ClosureDependenciesExtractor {
     /**
      * Namespaces provided (via goog.provide('x.y.Z') ) in the current file, with their corresponding PSI element.
      */
-    public final SortedMap<String, JSStatement> googRequires = new TreeMap<>(Comparator.naturalOrder());
+    public final SortedMap<String, PsiElement> googRequires = new TreeMap<>(Comparator.naturalOrder());
 
     /**
      * Namespaces required (via goog.require('x.y.Z') ) by the current file, with their corresponding PSI element.

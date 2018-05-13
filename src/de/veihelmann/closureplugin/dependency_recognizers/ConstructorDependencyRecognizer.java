@@ -32,7 +32,7 @@ public class ConstructorDependencyRecognizer extends DependencyRecognizerBase<JS
             if (isInvalidDependency(namespace)) {
                 return false;
             }
-            constructors.put(namespace, child);
+            constructors.put(normalizeNamespace(namespace), child);
             return true;
         }
 

@@ -3,7 +3,6 @@ package de.veihelmann.closureplugin;
 import com.intellij.codeInsight.daemon.GroupNames;
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.lang.javascript.psi.JSStatement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
@@ -38,7 +37,6 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
         return "MissingOrObsoleteGoogRequiresInspection";
     }
 
-
     @NotNull
     @Override
     public PsiElementVisitor buildVisitor(@NotNull final ProblemsHolder holder, boolean isOnTheFly) {
@@ -69,7 +67,7 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
         }
 
         private void markObsoleteRequires(ClosureDependenciesExtractor extractor) {
-            for (Map.Entry<String, JSStatement> declaredDependency : extractor.googRequires.entrySet()) {
+            for (Map.Entry<String, PsiElement> declaredDependency : extractor.googRequires.entrySet()) {
                 String namespace = declaredDependency.getKey();
                 if (extractor.dependencies.containsKey(namespace)) {
                     continue;

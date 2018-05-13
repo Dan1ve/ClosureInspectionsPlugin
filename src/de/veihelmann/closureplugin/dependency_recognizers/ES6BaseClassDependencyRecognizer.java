@@ -32,7 +32,7 @@ public class ES6BaseClassDependencyRecognizer extends DependencyRecognizerBase<E
             }
             String dependency = matcher.group(1);
             if (!isInvalidDependency(dependency)) {
-                dependencyMap.put(dependency, child);
+                dependencyMap.put(normalizeNamespace(dependency), child);
                 return true;
             }
         }

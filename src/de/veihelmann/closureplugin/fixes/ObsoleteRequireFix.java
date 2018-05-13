@@ -29,6 +29,4 @@ public class ObsoleteRequireFix extends GoogRequireFixBase {
     public String getText() {
         return "Remove goog.require";
     }
-
-
 }

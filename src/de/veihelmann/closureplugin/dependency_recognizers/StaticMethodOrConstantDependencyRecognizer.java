@@ -7,9 +7,17 @@ import com.intellij.lang.javascript.psi.JSReferenceExpression;
 import com.intellij.psi.PsiElement;
 import de.veihelmann.closureplugin.utils.ListMap;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 public class StaticMethodOrConstantDependencyRecognizer extends DependencyRecognizerBase<JSCallExpression> {
 
     private static final String NAMESPACE_WITH_CONSTANT_PATTERN = ".+\\.[A-Z_]+$";
+
+    private final static Set<String> WHITELISTED_METHODS = new HashSet<>(Arrays.asList(
+            "substring", "toString", "toLowerCase", "toUpperCase", "split", "slice", "splice", "toLocaleString", "push", "getBBox", "getBrowserEvent", "preventDefault", "concat"
+    ));
 
     protected final ListMap<String, PsiElement> dependencies;
 
@@ -42,11 +50,18 @@ public class StaticMethodOrConstantDependencyRecognizer extends DependencyRecogn
             return false;
         }
 
-        String namespace = namespaceWithMethod.substring(0, namespaceWithMethod.lastIndexOf("."));
+        int offsetBeforeMethodOrConstant = namespaceWithMethod.lastIndexOf(".");
+        String namespace = namespaceWithMethod.substring(0, offsetBeforeMethodOrConstant);
 
+        namespace = normalizeNamespace(namespace);
 
         if (namespace.matches(NAMESPACE_WITH_CONSTANT_PATTERN)) {
             namespace = namespace.substring(0, namespace.lastIndexOf("."));
+        } else {
+            String methodName = namespaceWithMethod.substring(offsetBeforeMethodOrConstant + 1);
+            if (WHITELISTED_METHODS.contains(methodName)) {
+                return false;
+            }
         }
 
 
@@ -65,6 +80,8 @@ public class StaticMethodOrConstantDependencyRecognizer extends DependencyRecogn
     }
 
     protected boolean isStaticMethodCall(JSCallExpression callElement) {
-        return childCount(callElement) > 1 && childType(callElement, 0, JSReferenceExpression.class) && childType(callElement, 1, JSArgumentList.class) && !callElement.getText().startsWith("this.") && !(callElement.getChildren()[0].getChildren()[0] instanceof JSNewExpression);
+        return childCount(callElement) > 1 && childType(callElement, 0, JSReferenceExpression.class) &&
+                childType(callElement, 1, JSArgumentList.class) && !callElement.getText().startsWith("$") && !callElement.getText().startsWith("this.")
+                && !(callElement.getChildren()[0].getChildren()[0] instanceof JSNewExpression);
     }
 }

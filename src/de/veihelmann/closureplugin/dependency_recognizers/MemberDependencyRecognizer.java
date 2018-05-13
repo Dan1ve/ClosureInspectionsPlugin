@@ -43,21 +43,28 @@ public class MemberDependencyRecognizer extends DependencyRecognizerBase<JSRefer
         }
 
         String namespace = memberCallElement.getFirstChild().getText();
+        if (memberCallElement.getText().matches(NAMESPACE_WITH_CONSTANT_AND_OPTIONAL_SUFFIX)) {
+            namespace = memberCallElement.getText();
+        }
 
         if (namespace.equals("goog.provide") || namespace.equals("goog.require")) {
             // Not handled in this class
             return false;
         }
 
+        boolean removedConstant = false;
         while (namespace.matches(NAMESPACE_WITH_CONSTANT_AND_OPTIONAL_SUFFIX)) {
             // Cut of any potential constants appended to the namespace
             namespace = namespace.substring(0, namespace.lastIndexOf("."));
+            removedConstant = true;
         }
 
-        if (namespace.matches(NAMESPACE_WITH_MEMBER_PATTERN)) {
+        if (!removedConstant && namespace.matches(NAMESPACE_WITH_MEMBER_PATTERN)) {
             // e.g. myvar.length (no Type or constant in reference (if following default Closure naming conventions)
             return false;
         }
+
+        namespace = normalizeNamespace(namespace);
 
         if (isInvalidDependency(namespace)) {
             return false;

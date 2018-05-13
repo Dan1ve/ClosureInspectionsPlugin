@@ -38,7 +38,7 @@ public abstract class DependencyRecognizerBase<T extends PsiElement> {
     protected abstract boolean doConsumeElement(T element);
 
     protected int childCount(PsiElement element) {
-        return element.getChildren().length + 1;
+        return element.getChildren().length;
     }
 
     protected boolean childType(PsiElement element, int childIndex, Class<?> targetClass) {
@@ -54,12 +54,15 @@ public abstract class DependencyRecognizerBase<T extends PsiElement> {
      * contains at least one dot (.).
      */
     protected boolean isInvalidDependency(String namespace) {
-        return !namespace.contains(".") || containsAny(namespace, "(", "[", ".prototype.")
+        return !namespace.contains(".") || namespace.startsWith("location.") || namespace.startsWith("$") || namespace.startsWith("document.") || containsAny(namespace, "(", "[", ".prototype.")
                 || namespace.endsWith(".prototype");
+    }
+
+    public static String normalizeNamespace(String namespace) {
+        return namespace.replaceAll("[\n\\s]", "");
     }
 
     private static boolean containsAny(String input, String... terms) {
         return Arrays.stream(terms).anyMatch(input::contains);
     }
-
 }

@@ -11,11 +11,11 @@ import java.util.Map;
 
 public class GoogRequireOrProvideRecognizer extends DependencyRecognizerBase<JSCallExpression> {
 
-    private final Map<String, JSStatement> googRequires;
+    private final Map<String, PsiElement> googRequires;
 
     private final Map<String, JSStatement> googProvides;
 
-    public GoogRequireOrProvideRecognizer(Map<String, JSStatement> googRequires, Map<String, JSStatement> googProvides) {
+    public GoogRequireOrProvideRecognizer(Map<String, PsiElement> googRequires, Map<String, JSStatement> googProvides) {
         this.googRequires = googRequires;
         this.googProvides = googProvides;
     }
@@ -39,6 +39,7 @@ public class GoogRequireOrProvideRecognizer extends DependencyRecognizerBase<JSC
         String calledMethod = targetMethod.getText();
 
         JSArgumentList argumentList = (JSArgumentList) callElement.getChildren()[1];
+        calledMethod = normalizeNamespace(calledMethod);
         boolean isGoogRequire = calledMethod.equals("goog.require");
         if (argumentList.getArguments().length != 1 || !(isGoogRequire || calledMethod.equals("goog.provide"))) {
             return false;
