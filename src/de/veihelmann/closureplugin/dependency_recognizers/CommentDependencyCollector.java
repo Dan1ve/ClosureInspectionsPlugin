@@ -20,7 +20,7 @@ public class CommentDependencyCollector {
 
     private final Set<String> rawTypesInComments;
 
-    private static final Set<String> RELEVANT_TAG_NAMES = new HashSet<>(asList("param", "return", "type", "typedef"));
+    private static final Set<String> RELEVANT_TAG_NAMES = new HashSet<>(asList("param", "return", "type", "typedef", "implements"));
 
     private static final String CLOSURE_TYPE_ANNOTATION_START = "{";
 
