@@ -6,9 +6,9 @@ import com.intellij.lang.javascript.psi.JSReferenceExpression;
 import com.intellij.psi.PsiElement;
 import de.veihelmann.closureplugin.utils.ListMap;
 
-public class GoogInheritsDependencyRecognizer extends StaticMethodOrConstantDependencyRecognizer {
+public class GoogInheritsLikeDependencyRecognizer extends StaticMethodOrConstantDependencyRecognizer {
 
-    public GoogInheritsDependencyRecognizer(ListMap<String, PsiElement> dependencyMap) {
+    public GoogInheritsLikeDependencyRecognizer(ListMap<String, PsiElement> dependencyMap) {
         super(dependencyMap);
     }
 
@@ -22,8 +22,19 @@ public class GoogInheritsDependencyRecognizer extends StaticMethodOrConstantDepe
         // [1] JSArgumentsList
         // [1] JSReferenceExpression : nth-of-type(2) : text
 
-        if (!isStaticMethodCall(callElement) || !normalizeNamespace(callElement.getFirstChild().getText()).equals("goog.inherits")) {
+        if (!isStaticMethodCall(callElement)) {
             return false;
+        }
+
+        String fullMethod = normalizeNamespace(callElement.getFirstChild().getText());
+
+        String alternativeInheritsMethod = "ts.fixInheritanceForEs6Class";
+        if (!(fullMethod.equals("goog.inherits") || fullMethod.equals(alternativeInheritsMethod))) {
+            return false;
+        }
+
+        if (fullMethod.equals(alternativeInheritsMethod)) {
+            dependencies.put(alternativeInheritsMethod, callElement.getFirstChild());
         }
 
         JSArgumentList argumentElement = (JSArgumentList) callElement.getChildren()[1];

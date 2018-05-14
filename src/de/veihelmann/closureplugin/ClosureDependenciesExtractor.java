@@ -43,7 +43,7 @@ public class ClosureDependenciesExtractor {
 
     private final List<DependencyRecognizerBase> dependencyRecognizers = asList( //
             new GoogRequireOrProvideRecognizer(googRequires, googProvides), //
-            new GoogInheritsDependencyRecognizer(dependencies), //
+            new GoogInheritsLikeDependencyRecognizer(dependencies), //
             new ConstructorDependencyRecognizer(dependencies), //
             new ES6BaseClassDependencyRecognizer(dependencies), //
             new StaticMethodOrConstantDependencyRecognizer(dependencies), //
