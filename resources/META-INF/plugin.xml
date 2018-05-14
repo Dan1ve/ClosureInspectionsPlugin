@@ -1,12 +1,14 @@
 <idea-plugin>
     <id>de.veihelmann.closureplugin</id>
     <name>Inspections for Google™ Closure</name>
-    <version>1.0</version>
+    <version>1.0.1</version>
     <vendor email="daniel.veihelmann@gmail.com">Daniel Veihelmann</vendor>
 
     <description><![CDATA[
       This plugin enhances IntelliJ's support for Google Closure. It can determine missing or obsolete 'goog.require'
       statements and offers corresponding quick-fixes.
+
+      More info & source code: https://github.com/Dan1ve/ClosureInspectionsPlugin
     ]]></description>
 
     <change-notes><![CDATA[
