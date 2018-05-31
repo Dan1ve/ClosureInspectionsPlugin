@@ -60,7 +60,7 @@ public class StaticMethodOrConstantDependencyRecognizer extends DependencyRecogn
             namespace = namespace.substring(0, namespace.lastIndexOf("."));
         } else {
             String methodName = namespaceWithMethod.substring(offsetBeforeMethodOrConstant + 1);
-            if (WHITELISTED_METHODS.contains(methodName)) {
+            if (!namespaceWithMethod.startsWith("goog.") && WHITELISTED_METHODS.contains(methodName)) {
                 return false;
             }
         }
