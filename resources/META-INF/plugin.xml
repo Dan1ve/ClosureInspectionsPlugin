@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>de.veihelmann.closureplugin</id>
     <name>Inspections for Google™ Closure</name>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <vendor email="daniel.veihelmann@gmail.com">Daniel Veihelmann</vendor>
 
     <description><![CDATA[
@@ -12,7 +12,7 @@
     ]]></description>
 
     <change-notes><![CDATA[
-      Initial version of plugin :)
+      Small bugfixes
     ]]>
     </change-notes>
 
