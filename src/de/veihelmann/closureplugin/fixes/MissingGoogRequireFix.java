@@ -58,11 +58,11 @@ public class MissingGoogRequireFix extends GoogRequireFixBase {
         Optional<JSStatement> elementToInsertRequireAfter =
                 googProvides.values().stream().max(comparingInt(PsiElement::getTextOffset));
 
-        if (!elementToInsertRequireAfter.isPresent()) {
-            elementToInsertRequireAfter = Optional.of((JSStatement) psiFile.getFirstChild());
+        if (elementToInsertRequireAfter.isPresent()) {
+            document.insertString(elementToInsertRequireAfter.get().getNextSibling().getTextOffset(), "\n" + buildRequireStatements(allSortedNamespaces));
+        } else {
+            document.insertString(0, "\n" + buildRequireStatements(allSortedNamespaces));
         }
-
-        document.insertString(elementToInsertRequireAfter.get().getNextSibling().getTextOffset(), "\n" + buildRequireStatements(allSortedNamespaces));
 
         currentRequires.put(this.missingNamespace, null);
     }
