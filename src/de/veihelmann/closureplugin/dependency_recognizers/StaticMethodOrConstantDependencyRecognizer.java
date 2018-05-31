@@ -16,7 +16,7 @@ public class StaticMethodOrConstantDependencyRecognizer extends DependencyRecogn
     private static final String NAMESPACE_WITH_CONSTANT_PATTERN = ".+\\.[A-Z_]+$";
 
     private final static Set<String> WHITELISTED_METHODS = new HashSet<>(Arrays.asList(
-            "substring", "toString", "toLowerCase", "toUpperCase", "split", "slice", "splice", "toLocaleString", "push", "getBBox", "getBrowserEvent", "preventDefault", "concat"
+            "substring", "toString", "toLowerCase", "toUpperCase", "split", "slice", "splice", "toLocaleString", "push", "getBBox", "getBrowserEvent", "preventDefault", "concat", "localeCompare"
     ));
 
     protected final ListMap<String, PsiElement> dependencies;
@@ -82,6 +82,26 @@ public class StaticMethodOrConstantDependencyRecognizer extends DependencyRecogn
     protected boolean isStaticMethodCall(JSCallExpression callElement) {
         return childCount(callElement) > 1 && childType(callElement, 0, JSReferenceExpression.class) &&
                 childType(callElement, 1, JSArgumentList.class) && !callElement.getText().startsWith("$") && !callElement.getText().startsWith("this.")
-                && !(callElement.getChildren()[0].getChildren()[0] instanceof JSNewExpression);
+                && !(isConstructorCall(callElement));
+    }
+
+    /**
+     * Checks the first childs (recursively) to determine if the statement starts with an constructor call ('new ...')
+     */
+    private boolean isConstructorCall(JSCallExpression callElement) {
+        if (childCount(callElement) == 0) {
+            return false;
+        }
+        PsiElement currentFirstChild = callElement.getFirstChild();
+        while (currentFirstChild != null) {
+            if (currentFirstChild instanceof JSNewExpression) {
+                return true;
+            }
+            if (childCount(currentFirstChild) == 0) {
+                return false;
+            }
+            currentFirstChild = currentFirstChild.getFirstChild();
+        }
+        return false;
     }
 }
