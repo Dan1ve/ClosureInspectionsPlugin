@@ -16,7 +16,8 @@ public class StaticMethodOrConstantDependencyRecognizer extends DependencyRecogn
     private static final String NAMESPACE_WITH_CONSTANT_PATTERN = ".+\\.[A-Z_]+$";
 
     private final static Set<String> WHITELISTED_METHODS = new HashSet<>(Arrays.asList(
-            "substring", "toString", "toLowerCase", "toUpperCase", "split", "slice", "splice", "toLocaleString", "push", "getBBox", "getBrowserEvent", "preventDefault", "concat", "localeCompare"
+            "substring", "toString", "toLowerCase", "toUpperCase", "split", "slice", "splice", "toLocaleString",
+            "push", "getBBox", "getBrowserEvent", "preventDefault", "concat", "localeCompare", "apply", "forEach", "map"
     ));
 
     protected final ListMap<String, PsiElement> dependencies;
