@@ -3,8 +3,10 @@ A plugin which enhances IntelliJ's support for Google™ Closure JavaScript by
 
 * checking for **missing** `goog.require` statements :eyeglasses:
 * checking for **obsolete** `goog.require`s :eyeglasses:
-* offering quick-fixes :star2: (incl. **fix all**) for both cases
-* sorting `goog.require` statements when quick fixes are invoked:
+* checking for **duplicate** goog.require/goog.provide statements
+* checking for usages of bracket notation (e.g. `myVar['myField']` instead of dot notation (`myVar.myField`). (The first alternative cannot be type-checked by the Closure compiler)
+* offering quick-fixes :star2: (incl. **fix all**) for all of the above
+* sorting `goog.require` statements automatically when quick fixes are invoked:
 
 ![Inspection GIF](https://github.com/Dan1ve/ClosureInspectionsPlugin/raw/master/images/require-fixes.gif)
 
