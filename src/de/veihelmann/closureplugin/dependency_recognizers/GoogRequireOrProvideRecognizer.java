@@ -5,6 +5,7 @@ import com.intellij.lang.javascript.psi.JSCallExpression;
 import com.intellij.lang.javascript.psi.JSReferenceExpression;
 import com.intellij.lang.javascript.psi.JSStatement;
 import com.intellij.psi.PsiElement;
+import de.veihelmann.closureplugin.utils.ListMap;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -13,7 +14,11 @@ public class GoogRequireOrProvideRecognizer extends DependencyRecognizerBase<JSC
 
     private final Map<String, PsiElement> googRequires;
 
+    public final ListMap<String, PsiElement> duplicateGoogRequires = new ListMap<>();
+
     private final Map<String, JSStatement> googProvides;
+
+    public final ListMap<String, PsiElement> duplicateGoogProvides = new ListMap<>();
 
     public GoogRequireOrProvideRecognizer(Map<String, PsiElement> googRequires, Map<String, JSStatement> googProvides) {
         this.googRequires = googRequires;
@@ -46,14 +51,26 @@ public class GoogRequireOrProvideRecognizer extends DependencyRecognizerBase<JSC
         }
 
         String targetNamespace = argumentList.getArguments()[0].getText().replaceAll("[\"']", "");
-        if (isGoogRequire) {
-            googRequires.put(targetNamespace, getParentStatement(callElement));
-        } else {
-            // We checked for goog.provide above, so we are safe in the 'else' clause here.
-            googProvides.put(targetNamespace, getParentStatement(callElement));
-        }
+        collectGoogRequireOrProvide(callElement, isGoogRequire, targetNamespace);
         return true;
 
+    }
+
+    private void collectGoogRequireOrProvide(JSCallExpression callElement, boolean isGoogRequire, String targetNamespace) {
+        if (isGoogRequire) {
+            if (googRequires.containsKey(targetNamespace)) {
+                duplicateGoogRequires.put(targetNamespace, getParentStatement(callElement));
+            } else {
+                googRequires.put(targetNamespace, getParentStatement(callElement));
+            }
+        } else {
+            // We checked for goog.provide above, so we are safe in the 'else' clause here.
+            if (googProvides.containsKey(targetNamespace)) {
+                duplicateGoogProvides.put(targetNamespace, getParentStatement(callElement));
+            } else {
+                googProvides.put(targetNamespace, getParentStatement(callElement));
+            }
+        }
     }
 
     private @NotNull

@@ -10,10 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class ClosureInspectionsProvider implements InspectionToolProvider {
     @NotNull
     public Class[] getInspectionClasses() {
-        return new Class[]{MissingOrObsoleteGoogRequiresInspection.class,
-
-                // TODO: Disabled (for now):
-                // ConvertToES6ClassInspection.class
+        return new Class[]{MissingOrObsoleteGoogRequiresInspection.class, UseOfBracketNotationInspection.class
         };
     }
 }

@@ -7,7 +7,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import de.veihelmann.closureplugin.fixes.MissingGoogRequireFix;
-import de.veihelmann.closureplugin.fixes.ObsoleteRequireFix;
+import de.veihelmann.closureplugin.fixes.ObsoleteRequireOrProvideFix;
+import de.veihelmann.closureplugin.utils.ListMap;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -64,6 +65,9 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
 
             markMissingRequires(extractor);
             markObsoleteRequires(extractor);
+
+            markDuplicationProblem(extractor.getDuplicateGoogRequires(), "Duplicate goog.require");
+            markDuplicationProblem(extractor.getDuplicateGoogProvides(), "Duplicate goog.provide");
         }
 
         private void markObsoleteRequires(ClosureDependenciesExtractor extractor) {
@@ -78,7 +82,7 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
                     continue;
                 }
                 PsiElement requireElement = declaredDependency.getValue();
-                ObsoleteRequireFix fix = new ObsoleteRequireFix(requireElement);
+                ObsoleteRequireOrProvideFix fix = new ObsoleteRequireOrProvideFix(requireElement);
                 problemsHolder.registerProblem(requireElement, "Obsolete require: " + declaredDependency.getKey(), fix);
             }
         }
@@ -105,7 +109,12 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
             return providedNamespaces.stream().anyMatch(providedNamespace -> providedNamespace.startsWith(namespace));
         }
 
-    }
 
+        private void markDuplicationProblem(ListMap<String, PsiElement> duplicateElements, String message) {
+            duplicateElements.keys().forEach(namespace -> {
+                duplicateElements.getNullSafe(namespace).forEach(element -> problemsHolder.registerProblem(element, message, new ObsoleteRequireOrProvideFix(element)));
+            });
+        }
+    }
 }
 

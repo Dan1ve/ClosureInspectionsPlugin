@@ -41,8 +41,10 @@ public class ClosureDependenciesExtractor {
      */
     public final Set<String> rawTypesInComments = new HashSet<>();
 
+    private final GoogRequireOrProvideRecognizer googRequireOrProvideRecognizer = new GoogRequireOrProvideRecognizer(googRequires, googProvides);
+
     private final List<DependencyRecognizerBase> dependencyRecognizers = asList( //
-            new GoogRequireOrProvideRecognizer(googRequires, googProvides), //
+            googRequireOrProvideRecognizer, //
             new GoogInheritsLikeDependencyRecognizer(dependencies), //
             new ConstructorDependencyRecognizer(dependencies), //
             new ES6BaseClassDependencyRecognizer(dependencies), //
@@ -66,6 +68,15 @@ public class ClosureDependenciesExtractor {
         }
 
         new RecursiveElementVisitor().visitElement(file);
+    }
+
+    public ListMap<String, PsiElement> getDuplicateGoogRequires() {
+        return googRequireOrProvideRecognizer.duplicateGoogRequires;
+    }
+
+
+    public ListMap<String, PsiElement> getDuplicateGoogProvides() {
+        return googRequireOrProvideRecognizer.duplicateGoogProvides;
     }
 
     class RecursiveElementVisitor extends FilteringPsiRecursiveElementWalkingVisitor {

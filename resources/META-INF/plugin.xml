@@ -1,18 +1,19 @@
 <idea-plugin>
     <id>de.veihelmann.closureplugin</id>
     <name>Inspections for Google™ Closure</name>
-    <version>1.0.2</version>
+    <version>1.1.0</version>
     <vendor email="daniel.veihelmann@gmail.com">Daniel Veihelmann</vendor>
 
     <description><![CDATA[
-      This plugin enhances IntelliJ's support for Google Closure. It can determine missing or obsolete 'goog.require'
-      statements and offers corresponding quick-fixes.
+      This plugin enhances IntelliJ's support for Google Closure. It can determine missing/obsolete/duplicate 'goog.require'
+      statements and offers corresponding quick-fixes. In addition, there is an inspection and quick-fix for usages of bracket notation (instead of dot notation) for accessing properties.
 
       More info & source code: https://github.com/Dan1ve/ClosureInspectionsPlugin
     ]]></description>
 
     <change-notes><![CDATA[
-      Small bugfixes
+      - New inspection to avoid bracket notation (e.g. myVar['myField']), which cannot be type-checked by the Closure compiler.
+      - Duplicate goog.require/goog.provide statements are now reported, too.
     ]]>
     </change-notes>
 
@@ -26,6 +27,7 @@
         <inspectionToolProvider id="closureinspectionsprovider"
                                 implementation="de.veihelmann.closureplugin.ClosureInspectionsProvider"
                                 order="LAST"/>
+
     </extensions>
 
     <actions>

@@ -9,10 +9,10 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Fixes a superfluous goog.require by removing the corresponding PSI element.
  */
-public class ObsoleteRequireFix extends GoogRequireFixBase {
+public class ObsoleteRequireOrProvideFix extends GoogRequireFixBase {
 
-    public ObsoleteRequireFix(@NotNull PsiElement requireElement) {
-        super(requireElement);
+    public ObsoleteRequireOrProvideFix(@NotNull PsiElement requireOrProvideElement) {
+        super(requireOrProvideElement);
     }
 
     @Override
@@ -27,6 +27,6 @@ public class ObsoleteRequireFix extends GoogRequireFixBase {
     @NotNull
     @Override
     public String getText() {
-        return "Remove goog.require";
+        return "Remove statement";
     }
 }
