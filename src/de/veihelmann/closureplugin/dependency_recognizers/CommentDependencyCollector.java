@@ -43,7 +43,7 @@ public class CommentDependencyCollector {
         }
 
         JSDocComment comment = (JSDocComment) psiComment;
-        List<JSDocTag> relevantTags = Arrays.stream(comment.getTags()).filter(tag -> RELEVANT_TAG_NAMES.contains(tag.getName())).collect(toList());
+        List<JSDocTag> relevantTags = collectTagsFromComment(comment, RELEVANT_TAG_NAMES);
         for (JSDocTag tag : relevantTags) {
 
             Optional<String> typeReferences = extractClosureTypeReference(tag.getValue());
@@ -53,6 +53,11 @@ public class CommentDependencyCollector {
             });
         }
     }
+
+    public static List<JSDocTag> collectTagsFromComment(JSDocComment comment, Set<String> relevantTags) {
+        return Arrays.stream(comment.getTags()).filter(tag -> relevantTags.contains(tag.getName())).collect(toList());
+    }
+
 
     private Optional<String> extractClosureTypeReference(JSDocTagValue tagValue) {
         if (tagValue == null || tagValue.getChildren().length == 0 || tagValue.getFirstChild().getText() == null) {

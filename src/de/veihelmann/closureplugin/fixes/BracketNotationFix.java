@@ -51,6 +51,6 @@ public class BracketNotationFix extends LocalQuickFixOnPsiElement {
     @NotNull
     @Override
     public String getFamilyName() {
-        return "Compile safety inspections";
+        return "Type safety";
     }
 }
