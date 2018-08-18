@@ -25,7 +25,7 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
 
     @NotNull
     public String getDisplayName() {
-        return "Checks for missing or superfluous goog.require statements";
+        return "Missing or superfluous goog.require statements";
     }
 
     @NotNull
@@ -63,11 +63,11 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
             ClosureDependenciesExtractor extractor = new ClosureDependenciesExtractor();
             extractor.extractDependencies(file);
 
-            markMissingRequires(extractor);
-            markObsoleteRequires(extractor);
-
             markDuplicationProblem(extractor.getDuplicateGoogRequires(), "Duplicate goog.require");
             markDuplicationProblem(extractor.getDuplicateGoogProvides(), "Duplicate goog.provide");
+
+            markMissingRequires(extractor);
+            markObsoleteRequires(extractor);
         }
 
         private void markObsoleteRequires(ClosureDependenciesExtractor extractor) {
@@ -82,7 +82,7 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
                     continue;
                 }
                 PsiElement requireElement = declaredDependency.getValue();
-                ObsoleteRequireOrProvideFix fix = new ObsoleteRequireOrProvideFix(requireElement);
+                ObsoleteRequireOrProvideFix fix = new ObsoleteRequireOrProvideFix(declaredDependency.getValue(), declaredDependency.getKey(), true);
                 problemsHolder.registerProblem(requireElement, "Obsolete require: " + declaredDependency.getKey(), fix);
             }
         }
@@ -112,7 +112,8 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
 
         private void markDuplicationProblem(ListMap<String, PsiElement> duplicateElements, String message) {
             duplicateElements.keys().forEach(namespace -> {
-                duplicateElements.getNullSafe(namespace).forEach(element -> problemsHolder.registerProblem(element, message, new ObsoleteRequireOrProvideFix(element)));
+                duplicateElements.getNullSafe(namespace).forEach(element -> problemsHolder.registerProblem(element, message,
+                        new ObsoleteRequireOrProvideFix(element, namespace, false)));
             });
         }
     }
