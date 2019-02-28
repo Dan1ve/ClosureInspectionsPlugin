@@ -6,10 +6,12 @@ import com.intellij.lang.javascript.psi.JSReferenceExpression;
 import com.intellij.psi.PsiElement;
 import de.veihelmann.closureplugin.utils.ListMap;
 
+import java.util.Map;
+
 public class GoogInheritsLikeDependencyRecognizer extends StaticMethodOrConstantDependencyRecognizer {
 
-    public GoogInheritsLikeDependencyRecognizer(ListMap<String, PsiElement> dependencyMap) {
-        super(dependencyMap);
+    public GoogInheritsLikeDependencyRecognizer(ListMap<String, PsiElement> dependencyMap, Map<String, String> fullNamespacesToImports) {
+        super(dependencyMap, fullNamespacesToImports);
     }
 
 

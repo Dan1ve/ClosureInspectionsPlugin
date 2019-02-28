@@ -76,6 +76,9 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
                 if (extractor.dependencies.containsKey(namespace)) {
                     continue;
                 }
+                if (extractor.fullNamespacesToShortReferences.containsKey(namespace) && extractor.dependencies.containsKey(extractor.fullNamespacesToShortReferences.get(namespace))) {
+                    continue;
+                }
                 if (extractor.rawTypesInComments.stream().anyMatch(commentString -> commentString.contains(namespace))) {
                     // One of the type parameters in the comments contains this namespace. This is thus an optional
                     // dependency and will not be reported as 'obsolete'.

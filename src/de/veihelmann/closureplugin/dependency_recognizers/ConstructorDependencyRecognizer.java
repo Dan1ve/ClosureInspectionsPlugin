@@ -5,6 +5,8 @@ import com.intellij.lang.javascript.psi.JSReferenceExpression;
 import com.intellij.psi.PsiElement;
 import de.veihelmann.closureplugin.utils.ListMap;
 
+import java.util.Map;
+
 /**
  * Collects constructor dependencies, e.g.  'new x.y.MyNamespace()'.
  */
@@ -12,7 +14,8 @@ public class ConstructorDependencyRecognizer extends DependencyRecognizerBase<JS
 
     private final ListMap<String, PsiElement> constructors;
 
-    public ConstructorDependencyRecognizer(ListMap<String, PsiElement> constructors) {
+    public ConstructorDependencyRecognizer(ListMap<String, PsiElement> constructors, Map<String, String> fullNamespacesToShortReferences) {
+        super(fullNamespacesToShortReferences);
         this.constructors = constructors;
     }
 
@@ -32,7 +35,7 @@ public class ConstructorDependencyRecognizer extends DependencyRecognizerBase<JS
             if (isInvalidDependency(namespace)) {
                 return false;
             }
-            constructors.put(normalizeNamespace(namespace), child);
+            constructors.put(resolveAndNormalizeNamespace(namespace), child);
             return true;
         }
 

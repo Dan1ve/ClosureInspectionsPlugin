@@ -9,6 +9,7 @@ import de.veihelmann.closureplugin.utils.ListMap;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class StaticMethodOrConstantDependencyRecognizer extends DependencyRecognizerBase<JSCallExpression> {
@@ -22,7 +23,8 @@ public class StaticMethodOrConstantDependencyRecognizer extends DependencyRecogn
 
     protected final ListMap<String, PsiElement> dependencies;
 
-    public StaticMethodOrConstantDependencyRecognizer(ListMap<String, PsiElement> constructors) {
+    public StaticMethodOrConstantDependencyRecognizer(ListMap<String, PsiElement> constructors, Map<String, String> fullNamespacesToImports) {
+        super(fullNamespacesToImports);
         this.dependencies = constructors;
     }
 
@@ -54,7 +56,7 @@ public class StaticMethodOrConstantDependencyRecognizer extends DependencyRecogn
         int offsetBeforeMethodOrConstant = namespaceWithMethod.lastIndexOf(".");
         String namespace = namespaceWithMethod.substring(0, offsetBeforeMethodOrConstant);
 
-        namespace = normalizeNamespace(namespace);
+        namespace = resolveAndNormalizeNamespace(namespace);
 
         if (namespace.matches(NAMESPACE_WITH_CONSTANT_PATTERN)) {
             namespace = namespace.substring(0, namespace.lastIndexOf("."));

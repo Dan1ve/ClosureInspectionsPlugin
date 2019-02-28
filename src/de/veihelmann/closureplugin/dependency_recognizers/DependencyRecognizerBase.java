@@ -4,12 +4,24 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Base class for dependency recognizers. A PSI element can be 'consumed' if a (Closure-) dependency could be
  * extracted.
  */
 public abstract class DependencyRecognizerBase<T extends PsiElement> {
+
+    private final Map<String, String> fullNamespacesToShortReferences;
+
+    protected DependencyRecognizerBase(Map<String, String> fullNamespacesToShortReferences) {
+        this.fullNamespacesToShortReferences = fullNamespacesToShortReferences;
+    }
+
+    protected void registerImportShortName(String fullNamespace, String shortReference) {
+        this.fullNamespacesToShortReferences.put(fullNamespace, shortReference);
+    }
 
     /**
      * @return <code>true</code> if the element was consumed, which means a dependency could be extracted,
@@ -55,10 +67,20 @@ public abstract class DependencyRecognizerBase<T extends PsiElement> {
      */
     protected boolean isInvalidDependency(String namespace) {
         return !namespace.contains(".") || namespace.startsWith("location.") || namespace.startsWith("$") || namespace.startsWith("document.") || containsAny(namespace, "(", "[", ".prototype.")
-                || namespace.endsWith(".prototype");
+                || namespace.endsWith(".prototype") || namespace.equals("goog.module");
     }
 
-    public static String normalizeNamespace(String namespace) {
+    protected String resolveAndNormalizeNamespace(String namespace) {
+        Optional<String> resolvedFullNamespace = fullNamespacesToShortReferences.keySet().stream().filter(
+                key -> fullNamespacesToShortReferences.get(key).equals(namespace)).findFirst();
+        if (resolvedFullNamespace.isPresent()) {
+            return normalizeNamespace(resolvedFullNamespace.get());
+        }
+        return normalizeNamespace(namespace);
+    }
+
+    /* package */
+    static String normalizeNamespace(String namespace) {
         return namespace.replaceAll("[\n\\s]", "");
     }
 

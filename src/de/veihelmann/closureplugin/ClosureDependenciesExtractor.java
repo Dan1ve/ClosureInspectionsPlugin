@@ -30,6 +30,14 @@ public class ClosureDependenciesExtractor {
     public final SortedMap<String, JSStatement> googProvides = new TreeMap<>(Comparator.naturalOrder());
 
     /**
+     * Stores short references to goog.require'd namespaces (can be done combined with goog.module.
+     * For example, for
+     * <code>const test = goog.require('x.y.test');</code>
+     * the mapping will be 'x.y.test' -> 'test'
+     */
+    public final Map<String, String> fullNamespacesToShortReferences = new HashMap<>();
+
+    /**
      * Actual dependencies to other namespaces in the current file (e.g. new x.y.Z(); ) ), with their corresponding PSI element.
      */
     public final ListMap<String, PsiElement> dependencies = new ListMap<>();
@@ -41,15 +49,15 @@ public class ClosureDependenciesExtractor {
      */
     public final Set<String> rawTypesInComments = new HashSet<>();
 
-    private final GoogRequireOrProvideRecognizer googRequireOrProvideRecognizer = new GoogRequireOrProvideRecognizer(googRequires, googProvides);
+    private final GoogRequireOrProvideRecognizer googRequireOrProvideRecognizer = new GoogRequireOrProvideRecognizer(googRequires, googProvides, fullNamespacesToShortReferences);
 
     private final List<DependencyRecognizerBase> dependencyRecognizers = asList( //
             googRequireOrProvideRecognizer, //
-            new GoogInheritsLikeDependencyRecognizer(dependencies), //
-            new ConstructorDependencyRecognizer(dependencies), //
-            new ES6BaseClassDependencyRecognizer(dependencies), //
-            new StaticMethodOrConstantDependencyRecognizer(dependencies), //
-            new MemberDependencyRecognizer(dependencies));
+            new GoogInheritsLikeDependencyRecognizer(dependencies, fullNamespacesToShortReferences), //
+            new ConstructorDependencyRecognizer(dependencies, fullNamespacesToShortReferences), //
+            new ES6BaseClassDependencyRecognizer(dependencies, fullNamespacesToShortReferences), //
+            new StaticMethodOrConstantDependencyRecognizer(dependencies, fullNamespacesToShortReferences), //
+            new MemberDependencyRecognizer(dependencies, fullNamespacesToShortReferences));
 
     private final CommentDependencyCollector commentDependencyRecognizer = new CommentDependencyCollector(rawTypesInComments);
 

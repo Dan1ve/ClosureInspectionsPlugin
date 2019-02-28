@@ -6,6 +6,8 @@ import com.intellij.lang.javascript.psi.JSReferenceExpression;
 import com.intellij.psi.PsiElement;
 import de.veihelmann.closureplugin.utils.ListMap;
 
+import java.util.Map;
+
 public class MemberDependencyRecognizer extends DependencyRecognizerBase<JSReferenceExpression> {
 
     private final ListMap<String, PsiElement> dependencies;
@@ -17,7 +19,8 @@ public class MemberDependencyRecognizer extends DependencyRecognizerBase<JSRefer
     /**
      * The passed map will be filled in-place, meaning it changes.
      */
-    public MemberDependencyRecognizer(ListMap<String, PsiElement> constructors) {
+    public MemberDependencyRecognizer(ListMap<String, PsiElement> constructors, Map<String, String> fullNamespacesToImports) {
+        super(fullNamespacesToImports);
         this.dependencies = constructors;
     }
 
@@ -64,7 +67,7 @@ public class MemberDependencyRecognizer extends DependencyRecognizerBase<JSRefer
             return false;
         }
 
-        namespace = normalizeNamespace(namespace);
+        namespace = resolveAndNormalizeNamespace(namespace);
 
         if (isInvalidDependency(namespace)) {
             return false;
