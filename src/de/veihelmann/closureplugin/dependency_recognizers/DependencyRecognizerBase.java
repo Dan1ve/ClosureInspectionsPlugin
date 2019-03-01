@@ -66,11 +66,19 @@ public abstract class DependencyRecognizerBase<T extends PsiElement> {
      * contains at least one dot (.).
      */
     protected boolean isInvalidDependency(String namespace) {
-        return !namespace.contains(".") || namespace.startsWith("location.") || namespace.startsWith("$") || namespace.startsWith("document.") || containsAny(namespace, "(", "[", ".prototype.")
+        return namespace == null || !namespace.contains(".") || namespace.startsWith("location.") || namespace.startsWith("$") || namespace.startsWith("document.") || containsAny(namespace, "(", "[", ".prototype.")
                 || namespace.endsWith(".prototype") || namespace.equals("goog.module");
     }
 
     protected String resolveAndNormalizeNamespace(String namespace) {
+        return resolveAndNormalizeNamespace(namespace, fullNamespacesToShortReferences);
+    }
+
+    /* package */
+    static String resolveAndNormalizeNamespace(String namespace, Map<String, String> fullNamespacesToShortReferences) {
+        if (namespace == null) {
+            return null;
+        }
         Optional<String> resolvedFullNamespace = fullNamespacesToShortReferences.keySet().stream().filter(
                 key -> fullNamespacesToShortReferences.get(key).equals(namespace)).findFirst();
         if (resolvedFullNamespace.isPresent()) {
