@@ -31,11 +31,11 @@ public class ConstructorDependencyRecognizer extends DependencyRecognizerBase<JS
             if (!(child instanceof JSReferenceExpression)) {
                 continue;
             }
-            String namespace = child.getText();
+            String namespace = resolveAndNormalizeNamespace(child.getText());
             if (isInvalidDependency(namespace)) {
                 return false;
             }
-            constructors.put(resolveAndNormalizeNamespace(namespace), child);
+            constructors.put(namespace, child);
             return true;
         }
 

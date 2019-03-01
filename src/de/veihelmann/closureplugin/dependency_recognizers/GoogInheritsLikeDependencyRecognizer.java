@@ -28,7 +28,7 @@ public class GoogInheritsLikeDependencyRecognizer extends StaticMethodOrConstant
             return false;
         }
 
-        String fullMethod = normalizeNamespace(callElement.getFirstChild().getText());
+        String fullMethod = resolveAndNormalizeNamespace(callElement.getFirstChild().getText());
 
         String alternativeInheritsMethod = "ts.fixInheritanceForEs6Class";
         if (!(fullMethod.equals("goog.inherits") || fullMethod.equals(alternativeInheritsMethod))) {
@@ -49,7 +49,7 @@ public class GoogInheritsLikeDependencyRecognizer extends StaticMethodOrConstant
             }
 
             if (alreadySawOneReference) {
-                dependencies.put(normalizeNamespace(argument.getText()), argument);
+                dependencies.put(resolveAndNormalizeNamespace(argument.getText()), argument);
                 return true;
             }
             alreadySawOneReference = true;

@@ -3,6 +3,7 @@ package de.veihelmann.closureplugin;
 import com.intellij.codeInsight.daemon.GroupNames;
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
@@ -91,13 +92,14 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
         }
 
         private void markMissingRequires(ClosureDependenciesExtractor extractor) {
+
             extractor.dependencies.keys().forEach(namespace -> {
                 List<PsiElement> dependencyLocations = extractor.dependencies.getNullSafe(namespace);
                 if (!isMissingRequire(extractor, namespace)) {
                     return;
                 }
                 for (PsiElement location : dependencyLocations) {
-                    MissingGoogRequireFix fix = new MissingGoogRequireFix(location, extractor.googRequires, namespace, extractor.googProvides);
+                    MissingGoogRequireFix fix = new MissingGoogRequireFix(location, extractor.googRequires, namespace, extractor.googProvides, extractor.googModules, extractor.fullNamespacesToShortReferences);
                     problemsHolder.registerProblem(location, "No goog.require for '" + namespace + "'", GENERIC_ERROR_OR_WARNING, fix);
                 }
             });

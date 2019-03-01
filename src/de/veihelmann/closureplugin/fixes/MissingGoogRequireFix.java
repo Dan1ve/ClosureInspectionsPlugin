@@ -24,11 +24,16 @@ public class MissingGoogRequireFix extends GoogRequireFixBase {
 
     private final SortedMap<String, JSStatement> googProvides;
 
-    public MissingGoogRequireFix(@NotNull PsiElement element, SortedMap<String, PsiElement> currentRequires, String missingNamespace, SortedMap<String, JSStatement> googProvides) {
+    private final SortedMap<String, JSStatement> googModules;
+    private final Map<String, String> fullNamespacesToShortReferences;
+
+    public MissingGoogRequireFix(@NotNull PsiElement element, SortedMap<String, PsiElement> currentRequires, String missingNamespace, SortedMap<String, JSStatement> googProvides, SortedMap<String, JSStatement> googModules, Map<String, String> fullNamespacesToShortReferences) {
         super(element);
         this.missingNamespace = missingNamespace;
         this.currentRequires = currentRequires;
         this.googProvides = googProvides;
+        this.googModules = googModules;
+        this.fullNamespacesToShortReferences = fullNamespacesToShortReferences;
     }
 
 
@@ -52,24 +57,40 @@ public class MissingGoogRequireFix extends GoogRequireFixBase {
         }
 
         // Remove existing goog.requires
-        document.setText(document.getText().replaceAll("goog\\s*\\.\\s*require\\s*\\([^)]+\\);?[\\n\\r]+", ""));
+        document.setText(document.getText().replaceAll("((const|let|var)\\s+[\\w_\\d]+\\s+=\\s+)?goog\\s*\\.\\s*require\\s*\\([^)]+\\);?[\\n\\r]+", ""));
 
-        // Insert new goog. require (a) after goog.provide, or (b) at the top of the file (fallback).
+        SortedMap<String, JSStatement> relevantImports = this.googProvides;
+        if (!googModules.isEmpty()) {
+            relevantImports = this.googModules;
+        }
+
+        // Insert new goog.require (a) after goog.provide/goog.module, or (b) at the top of the file (fallback).
         Optional<JSStatement> elementToInsertRequireAfter =
-                googProvides.values().stream().max(comparingInt(PsiElement::getTextOffset));
+                relevantImports.values().stream().max(comparingInt(PsiElement::getTextOffset));
 
         if (elementToInsertRequireAfter.isPresent()) {
-            document.insertString(elementToInsertRequireAfter.get().getNextSibling().getTextOffset(), "\n" + buildRequireStatements(allSortedNamespaces));
+            int insertionOffset = elementToInsertRequireAfter.get().getNextSibling().getTextOffset();
+            if (!this.googModules.isEmpty()) {
+                String legacyDeclaration = "goog.module.declareLegacyNamespace();";
+                int indexOfLegacyDeclaration = document.getText().indexOf(legacyDeclaration);
+                if (indexOfLegacyDeclaration > -1) {
+                    insertionOffset = Math.max(insertionOffset, indexOfLegacyDeclaration + legacyDeclaration.length());
+                }
+            }
+            insertRequires(document, insertionOffset, allSortedNamespaces, !this.googModules.isEmpty());
         } else {
-            document.insertString(0, "\n" + buildRequireStatements(allSortedNamespaces));
+            insertRequires(document, 0, allSortedNamespaces, !this.googModules.isEmpty());
         }
 
         currentRequires.put(this.missingNamespace, null);
     }
 
-    private String buildRequireStatements(SortedSet<String> allSortedNamespaces) {
-        StringBuilder builder = new StringBuilder();
+    private void insertRequires(Document document, int insertionOffset, SortedSet<String> allSortedNamespaces, boolean useVariableForGoogRequires) {
+        StringBuilder builder = new StringBuilder("\n");
         String lastPrefix = null;
+
+        List<String> namespacesToReferenceAfterwards = new ArrayList<>();
+
         for (String namespace : allSortedNamespaces) {
             if (namespace.contains(".") && !namespace.substring(0, namespace.indexOf(".")).equals(lastPrefix)) {
                 // add empty line between namespaces of different origins.
@@ -78,11 +99,25 @@ public class MissingGoogRequireFix extends GoogRequireFixBase {
             if (namespace.contains(".")) {
                 lastPrefix = namespace.substring(0, namespace.indexOf("."));
             }
+
+            if (useVariableForGoogRequires) {
+                String importReference = fullNamespacesToShortReferences.get(namespace);
+                if (importReference == null) {
+                    namespacesToReferenceAfterwards.add(namespace);
+                } else {
+                    builder.append("const ").append(importReference).append(" = ");
+                }
+            }
+
             builder.append("goog.require('")
                     .append(namespace)
                     .append("');\n");
         }
-        return builder.toString();
+
+        document.insertString(insertionOffset, builder.toString());
+        namespacesToReferenceAfterwards.forEach(namespace -> {
+            document.setText(FixUtils.replaceExistingGoogRequiresWithSafeReferences(document.getText(), namespace));
+        });
     }
 
     @NotNull

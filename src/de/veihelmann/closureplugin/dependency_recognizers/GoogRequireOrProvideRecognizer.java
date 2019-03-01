@@ -18,19 +18,23 @@ public class GoogRequireOrProvideRecognizer extends DependencyRecognizerBase<JSC
     private final Map<String, PsiElement> googRequires;
 
     /**
-     * In case of s.th. like const foo = goog.require('x.y'), contains a mapping from 'x.y' -> 'foo', so the import 'shortcuts'.
+     * In case of s.th. like
+     * <code>const foo = goog.require('x.y')</code>,
+     * contains a mapping from 'x.y' -> 'foo', so the import 'shortcuts'.
      */
-
     public final ListMap<String, PsiElement> duplicateGoogRequires = new ListMap<>();
 
     private final Map<String, JSStatement> googProvides;
 
+    private final Map<String, JSStatement> googModules;
+
     public final ListMap<String, PsiElement> duplicateGoogProvides = new ListMap<>();
 
-    public GoogRequireOrProvideRecognizer(Map<String, PsiElement> googRequires, Map<String, JSStatement> googProvides, Map<String, String> fullNamespacesToImports) {
+    public GoogRequireOrProvideRecognizer(Map<String, PsiElement> googRequires, Map<String, JSStatement> googProvides, Map<String, JSStatement> googModules, Map<String, String> fullNamespacesToImports) {
         super(fullNamespacesToImports);
         this.googRequires = googRequires;
         this.googProvides = googProvides;
+        this.googModules = googModules;
     }
 
 
@@ -53,8 +57,8 @@ public class GoogRequireOrProvideRecognizer extends DependencyRecognizerBase<JSC
         Map<String, String> fullNamespacesToImportedOne = new HashMap<>();
         JSArgumentList argumentList = (JSArgumentList) callElement.getChildren()[1];
         calledMethod = resolveAndNormalizeNamespace(calledMethod);
-        boolean isGoogRequire = calledMethod.equals("goog.require");
-        if (argumentList.getArguments().length != 1 || !(isGoogRequire || calledMethod.equals("goog.provide"))) {
+
+        if (argumentList.getArguments().length != 1 || !(calledMethod.equals("goog.require") || calledMethod.equals("goog.provide") || calledMethod.equals("goog.module"))) {
             return false;
         }
 
@@ -71,28 +75,35 @@ public class GoogRequireOrProvideRecognizer extends DependencyRecognizerBase<JSC
             }
         }
 
-        collectGoogRequireOrProvide(callElement, isGoogRequire, targetNamespace, fullNamespacesToImportedOne);
+        collectGoogRequireOrProvide(callElement, calledMethod, targetNamespace, fullNamespacesToImportedOne);
         return true;
 
     }
 
-    private void collectGoogRequireOrProvide(JSCallExpression callElement, boolean isGoogRequire, String targetNamespace, Map<String, String> fullNamespacesToImportedOne) {
-        if (isGoogRequire) {
-            if (googRequires.containsKey(targetNamespace)) {
-                duplicateGoogRequires.put(targetNamespace, getParentStatement(callElement));
-            } else {
-                googRequires.put(targetNamespace, getParentStatement(callElement));
-                if (fullNamespacesToImportedOne.containsKey(targetNamespace)) {
-                    registerImportShortName(targetNamespace, fullNamespacesToImportedOne.get(targetNamespace));
+    private void collectGoogRequireOrProvide(JSCallExpression callElement, String calledMethod, String targetNamespace, Map<String, String> fullNamespacesToImportedOne) {
+        switch (calledMethod) {
+            case "goog.require":
+                if (googRequires.containsKey(targetNamespace)) {
+                    duplicateGoogRequires.put(targetNamespace, getParentStatement(callElement));
+                } else {
+                    googRequires.put(targetNamespace, getParentStatement(callElement));
+                    if (fullNamespacesToImportedOne.containsKey(targetNamespace)) {
+                        registerImportShortName(targetNamespace, fullNamespacesToImportedOne.get(targetNamespace));
+                    }
                 }
-            }
-        } else {
-            // We checked for goog.provide above, so we are safe in the 'else' clause here.
-            if (googProvides.containsKey(targetNamespace)) {
-                duplicateGoogProvides.put(targetNamespace, getParentStatement(callElement));
-            } else {
-                googProvides.put(targetNamespace, getParentStatement(callElement));
-            }
+                break;
+            case "goog.provide":
+                if (googProvides.containsKey(targetNamespace)) {
+                    duplicateGoogProvides.put(targetNamespace, getParentStatement(callElement));
+                } else {
+                    googProvides.put(targetNamespace, getParentStatement(callElement));
+                }
+                break;
+            case "goog.module":
+                googModules.put(targetNamespace, getParentStatement(callElement));
+                break;
+            default:
+                throw new UnsupportedOperationException("Unexpected method at this point: " + calledMethod);
         }
     }
 
