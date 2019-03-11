@@ -4,6 +4,7 @@ A plugin which enhances IntelliJ's support for Google™ Closure JavaScript by
 * checking for **missing** `goog.require` statements :eyeglasses:
 * checking for **obsolete** `goog.require`s :eyeglasses:
 * checking for **duplicate** goog.require/goog.provide statements
+* checking for `goog.provide` to `goog.module` conversion 
 * checking for usages of **bracket notation** (e.g. `myVar['myField']` instead of dot notation (`myVar.myField`). (The first alternative cannot be type-checked by the Closure compiler)
 * checking for **swapped type annotation & parameter name** in JSDoc (correct order: `@param {string} myParameter`)
 * offering quick-fixes :star2: (incl. **fix all**) for all of the above
