@@ -2,6 +2,7 @@ package de.veihelmann.closureplugin.fixes;
 
 import com.intellij.codeInspection.LocalQuickFixOnPsiElement;
 import com.intellij.lang.javascript.psi.JSCallExpression;
+import com.intellij.lang.javascript.psi.JSEmptyStatement;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
@@ -36,7 +37,8 @@ public class ConvertToGoogModuleFix extends LocalQuickFixOnPsiElement {
         JSCallExpression statement = (JSCallExpression) targetElement;
         // TODO (DV) Handle multiple goog.provides in same file
         String providedNamespace = statement.getText().substring(statement.getText().indexOf("'")).replaceAll("[\"';)]", "");
-        Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
+        PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
+        Document document = documentManager.getDocument(psiFile);
         if (document == null) {
             return;
         }
@@ -54,7 +56,10 @@ public class ConvertToGoogModuleFix extends LocalQuickFixOnPsiElement {
         documentText = documentText.replace("class " + providedNamespace, "class " + newClassName);
         documentText = documentText.replace(newClassName + " = class ", "class " + newClassName + " ");
 
-        documentText += "\nexports = " + newClassName + ";";
+        if (!documentText.endsWith("\n")) {
+            documentText += "\n";
+        }
+        documentText += "exports = " + newClassName + ";";
 
         for (String oldRequire : oldStyleRequiredNamespaces) {
             documentText = FixUtils.replaceExistingGoogRequiresWithSafeReferences(documentText, oldRequire);
@@ -62,7 +67,23 @@ public class ConvertToGoogModuleFix extends LocalQuickFixOnPsiElement {
 
         document.setText(documentText);
 
+        // We need to commit our document changes here, as we may change the AST in removeTrailingClassSemicolons()
+        documentManager.commitDocument(document);
+        removeTrailingClassSemicolons(psiFile);
         CodeStyleManager.getInstance(project).reformat(psiFile);
+    }
+
+    /**
+     * Due to the different class structure after the conversion to a goog.module file, we might have unnecessary
+     * semicolons after the closing class bracket (};). Thus, this method removes all semicolons right after class definitions
+     * by checking the direct children of the {@link PsiFile}.
+     */
+    private void removeTrailingClassSemicolons(PsiFile psiFile) {
+        for (PsiElement child : psiFile.getChildren()) {
+            if (child instanceof JSEmptyStatement && ";".equals(child.getText())) {
+                child.delete();
+            }
+        }
     }
 
     private List<String> extractSortedOldRequiredNamespaces(String documentText) {
