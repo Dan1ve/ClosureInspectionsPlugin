@@ -3,6 +3,7 @@ package de.veihelmann.closureplugin;
 import com.intellij.codeInsight.daemon.GroupNames;
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
@@ -25,7 +26,7 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
 
     @NotNull
     public String getDisplayName() {
-        return "Checks for missing or superfluous goog.require statements";
+        return "Missing or superfluous goog.require statements";
     }
 
     @NotNull
@@ -63,11 +64,11 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
             ClosureDependenciesExtractor extractor = new ClosureDependenciesExtractor();
             extractor.extractDependencies(file);
 
-            markMissingRequires(extractor);
-            markObsoleteRequires(extractor);
-
             markDuplicationProblem(extractor.getDuplicateGoogRequires(), "Duplicate goog.require");
             markDuplicationProblem(extractor.getDuplicateGoogProvides(), "Duplicate goog.provide");
+
+            markMissingRequires(extractor);
+            markObsoleteRequires(extractor);
         }
 
         private void markObsoleteRequires(ClosureDependenciesExtractor extractor) {
@@ -76,25 +77,29 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
                 if (extractor.dependencies.containsKey(namespace)) {
                     continue;
                 }
+                if (extractor.fullNamespacesToShortReferences.containsKey(namespace) && extractor.dependencies.containsKey(extractor.fullNamespacesToShortReferences.get(namespace))) {
+                    continue;
+                }
                 if (extractor.rawTypesInComments.stream().anyMatch(commentString -> commentString.contains(namespace))) {
                     // One of the type parameters in the comments contains this namespace. This is thus an optional
                     // dependency and will not be reported as 'obsolete'.
                     continue;
                 }
                 PsiElement requireElement = declaredDependency.getValue();
-                ObsoleteRequireOrProvideFix fix = new ObsoleteRequireOrProvideFix(requireElement);
+                ObsoleteRequireOrProvideFix fix = new ObsoleteRequireOrProvideFix(declaredDependency.getValue(), declaredDependency.getKey(), true);
                 problemsHolder.registerProblem(requireElement, "Obsolete require: " + declaredDependency.getKey(), fix);
             }
         }
 
         private void markMissingRequires(ClosureDependenciesExtractor extractor) {
+
             extractor.dependencies.keys().forEach(namespace -> {
                 List<PsiElement> dependencyLocations = extractor.dependencies.getNullSafe(namespace);
                 if (!isMissingRequire(extractor, namespace)) {
                     return;
                 }
                 for (PsiElement location : dependencyLocations) {
-                    MissingGoogRequireFix fix = new MissingGoogRequireFix(location, extractor.googRequires, namespace, extractor.googProvides);
+                    MissingGoogRequireFix fix = new MissingGoogRequireFix(location, extractor.googRequires, namespace, extractor.googProvides, extractor.googModules, extractor.fullNamespacesToShortReferences);
                     problemsHolder.registerProblem(location, "No goog.require for '" + namespace + "'", GENERIC_ERROR_OR_WARNING, fix);
                 }
             });
@@ -112,7 +117,8 @@ public class MissingOrObsoleteGoogRequiresInspection extends LocalInspectionTool
 
         private void markDuplicationProblem(ListMap<String, PsiElement> duplicateElements, String message) {
             duplicateElements.keys().forEach(namespace -> {
-                duplicateElements.getNullSafe(namespace).forEach(element -> problemsHolder.registerProblem(element, message, new ObsoleteRequireOrProvideFix(element)));
+                duplicateElements.getNullSafe(namespace).forEach(element -> problemsHolder.registerProblem(element, message,
+                        new ObsoleteRequireOrProvideFix(element, namespace, false)));
             });
         }
     }

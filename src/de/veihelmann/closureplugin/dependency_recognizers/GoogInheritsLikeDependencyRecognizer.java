@@ -6,10 +6,12 @@ import com.intellij.lang.javascript.psi.JSReferenceExpression;
 import com.intellij.psi.PsiElement;
 import de.veihelmann.closureplugin.utils.ListMap;
 
+import java.util.Map;
+
 public class GoogInheritsLikeDependencyRecognizer extends StaticMethodOrConstantDependencyRecognizer {
 
-    public GoogInheritsLikeDependencyRecognizer(ListMap<String, PsiElement> dependencyMap) {
-        super(dependencyMap);
+    public GoogInheritsLikeDependencyRecognizer(ListMap<String, PsiElement> dependencyMap, Map<String, String> fullNamespacesToImports) {
+        super(dependencyMap, fullNamespacesToImports);
     }
 
 
@@ -26,7 +28,7 @@ public class GoogInheritsLikeDependencyRecognizer extends StaticMethodOrConstant
             return false;
         }
 
-        String fullMethod = normalizeNamespace(callElement.getFirstChild().getText());
+        String fullMethod = resolveAndNormalizeNamespace(callElement.getFirstChild().getText());
 
         String alternativeInheritsMethod = "ts.fixInheritanceForEs6Class";
         if (!(fullMethod.equals("goog.inherits") || fullMethod.equals(alternativeInheritsMethod))) {
@@ -47,7 +49,7 @@ public class GoogInheritsLikeDependencyRecognizer extends StaticMethodOrConstant
             }
 
             if (alreadySawOneReference) {
-                dependencies.put(normalizeNamespace(argument.getText()), argument);
+                dependencies.put(resolveAndNormalizeNamespace(argument.getText()), argument);
                 return true;
             }
             alreadySawOneReference = true;

@@ -1,9 +1,10 @@
 package de.veihelmann.closureplugin.fixes;
 
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiWhiteSpace;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -11,22 +12,38 @@ import org.jetbrains.annotations.NotNull;
  */
 public class ObsoleteRequireOrProvideFix extends GoogRequireFixBase {
 
-    public ObsoleteRequireOrProvideFix(@NotNull PsiElement requireOrProvideElement) {
-        super(requireOrProvideElement);
-    }
+    private final String obsoleteNamespace;
 
-    @Override
-    public void invoke(@NotNull Project project, @NotNull PsiFile psiFile, @NotNull PsiElement psiElement, @NotNull PsiElement psiElement1) {
-        if (psiElement.getNextSibling() != null && psiElement.getNextSibling() instanceof PsiWhiteSpace) {
-            // Remove whitespace after goog.require to avoid empty lines after removal
-            psiElement.getNextSibling().delete();
-        }
-        psiElement.delete();
+    private final boolean removeAllRequiresForNamespace;
+
+    public ObsoleteRequireOrProvideFix(PsiElement googRequireElement, String obsoleteNamespace, boolean removeAllRequiresForNamespace) {
+        super(googRequireElement);
+        this.obsoleteNamespace = obsoleteNamespace;
+        this.removeAllRequiresForNamespace = removeAllRequiresForNamespace;
     }
 
     @NotNull
     @Override
     public String getText() {
-        return "Remove statement";
+        return "Remove goog.require for '" + obsoleteNamespace + "'";
+    }
+
+    @Override
+    public void invoke(@NotNull Project project, @NotNull PsiFile psiFile, @NotNull PsiElement psiElement, @NotNull PsiElement psiElement1) {
+
+        psiElement.delete();
+
+        if (!removeAllRequiresForNamespace) {
+            return;
+        }
+        PsiDocumentManager manager = PsiDocumentManager.getInstance(project);
+        if (manager == null) {
+            return;
+        }
+        Document document = manager.getDocument(psiFile);
+        if (document != null) {
+            document.setText(document.getText()
+                    .replaceAll("goog\\s*\\.\\s*require\\([\"']" + obsoleteNamespace + "[\"']\\);?\\R?", ""));
+        }
     }
 }

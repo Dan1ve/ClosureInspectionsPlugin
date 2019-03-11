@@ -20,14 +20,28 @@ import static java.util.Arrays.asList;
 public class ClosureDependenciesExtractor {
 
     /**
-     * Namespaces provided (via goog.provide('x.y.Z') ) in the current file, with their corresponding PSI element.
+     * Namespaces required (via goog.require('x.y.Z') ) by the current file, with their corresponding PSI element.
      */
     public final SortedMap<String, PsiElement> googRequires = new TreeMap<>(Comparator.naturalOrder());
 
     /**
-     * Namespaces required (via goog.require('x.y.Z') ) by the current file, with their corresponding PSI element.
+     * Namespaces provided (via goog.provide('x.y.Z') ) in the current file, with their corresponding PSI element.
      */
     public final SortedMap<String, JSStatement> googProvides = new TreeMap<>(Comparator.naturalOrder());
+
+    /**
+     * Namespaces provided via goog.module (via goog.module('x.y.Z') ) by the current file, with their corresponding PSI element.
+     * Note that either goog.module or goog.provide is allowed per file, not both.
+     */
+    public final SortedMap<String, JSStatement> googModules = new TreeMap<>(Comparator.naturalOrder());
+
+    /**
+     * Stores short references to goog.require'd namespaces (can be done combined with goog.module.
+     * For example, for
+     * <code>const test = goog.require('x.y.test');</code>
+     * the mapping will be 'x.y.test' -> 'test'
+     */
+    public final Map<String, String> fullNamespacesToShortReferences = new HashMap<>();
 
     /**
      * Actual dependencies to other namespaces in the current file (e.g. new x.y.Z(); ) ), with their corresponding PSI element.
@@ -41,17 +55,17 @@ public class ClosureDependenciesExtractor {
      */
     public final Set<String> rawTypesInComments = new HashSet<>();
 
-    private final GoogRequireOrProvideRecognizer googRequireOrProvideRecognizer = new GoogRequireOrProvideRecognizer(googRequires, googProvides);
+    private final GoogRequireOrProvideRecognizer googRequireOrProvideRecognizer = new GoogRequireOrProvideRecognizer(googRequires, googProvides, googModules, fullNamespacesToShortReferences);
 
     private final List<DependencyRecognizerBase> dependencyRecognizers = asList( //
             googRequireOrProvideRecognizer, //
-            new GoogInheritsLikeDependencyRecognizer(dependencies), //
-            new ConstructorDependencyRecognizer(dependencies), //
-            new ES6BaseClassDependencyRecognizer(dependencies), //
-            new StaticMethodOrConstantDependencyRecognizer(dependencies), //
-            new MemberDependencyRecognizer(dependencies));
+            new GoogInheritsLikeDependencyRecognizer(dependencies, fullNamespacesToShortReferences), //
+            new ConstructorDependencyRecognizer(dependencies, fullNamespacesToShortReferences), //
+            new ES6BaseClassDependencyRecognizer(dependencies, fullNamespacesToShortReferences), //
+            new StaticMethodOrConstantDependencyRecognizer(dependencies, fullNamespacesToShortReferences), //
+            new MemberDependencyRecognizer(dependencies, fullNamespacesToShortReferences));
 
-    private final CommentDependencyCollector commentDependencyRecognizer = new CommentDependencyCollector(rawTypesInComments);
+    private final CommentDependencyCollector commentDependencyRecognizer = new CommentDependencyCollector(rawTypesInComments, fullNamespacesToShortReferences);
 
 
     /**

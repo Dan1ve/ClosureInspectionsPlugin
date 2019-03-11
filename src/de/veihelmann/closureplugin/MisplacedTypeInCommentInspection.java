@@ -6,7 +6,9 @@ import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.lang.javascript.psi.jsdoc.JSDocComment;
 import com.intellij.lang.javascript.psi.jsdoc.JSDocTag;
 import com.intellij.psi.PsiComment;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
+import com.intellij.psi.PsiWhiteSpace;
 import de.veihelmann.closureplugin.dependency_recognizers.CommentDependencyCollector;
 import de.veihelmann.closureplugin.fixes.SwappedTypeAndParameterInCommentFix;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +25,7 @@ public class MisplacedTypeInCommentInspection extends LocalInspectionTool {
 
     @NotNull
     public String getDisplayName() {
-        return "Checks for misplaced types in comments";
+        return "Misplaced types in comments";
     }
 
     @NotNull
@@ -49,16 +51,26 @@ public class MisplacedTypeInCommentInspection extends LocalInspectionTool {
                 }
                 List<JSDocTag> paramTags = CommentDependencyCollector.collectTagsFromComment((JSDocComment) comment, new HashSet<>(Arrays.asList("param")));
                 paramTags.forEach(tag -> {
-                    if (tag.getChildren().length > 2) {
-                        String nextAfterParam = tag.getChildren()[2].getText();
-                        if (nextAfterParam.startsWith("{")) {
+                    if (tag.getChildren().length <= 1) {
+                        return;
+                    }
+                    PsiElement afterParamElement = tag.getChildren()[1];
+                    if (afterParamElement instanceof PsiWhiteSpace) {
+                        if (tag.getChildren().length > 2) {
+                            afterParamElement = tag.getChildren()[2];
+                        } else {
                             return;
                         }
-                        if (SwappedTypeAndParameterInCommentFix.canBeQuickFixed(tag)) {
-                            holder.registerProblem(tag, "Type and parameter name are in wrong order", new SwappedTypeAndParameterInCommentFix(tag));
-                        } else {
-                            holder.registerProblem(tag, "Missing type after @param");
-                        }
+
+                    }
+                    if (afterParamElement.getText().startsWith("{")) {
+                        // Type annotation present
+                        return;
+                    }
+                    if (SwappedTypeAndParameterInCommentFix.canBeQuickFixed(tag)) {
+                        holder.registerProblem(tag, "Type and parameter name are in wrong order", new SwappedTypeAndParameterInCommentFix(tag));
+                    } else {
+                        holder.registerProblem(tag, "Missing type after @param");
                     }
                 });
 

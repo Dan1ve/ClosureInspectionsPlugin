@@ -7,7 +7,7 @@ import com.intellij.psi.PsiComment;
 
 import java.util.*;
 
-import static de.veihelmann.closureplugin.dependency_recognizers.DependencyRecognizerBase.normalizeNamespace;
+import static de.veihelmann.closureplugin.dependency_recognizers.DependencyRecognizerBase.resolveAndNormalizeNamespace;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
@@ -20,17 +20,20 @@ public class CommentDependencyCollector {
 
     private final Set<String> rawTypesInComments;
 
-    private static final Set<String> RELEVANT_TAG_NAMES = new HashSet<>(asList("param", "return", "type", "typedef", "implements"));
+    private static final Set<String> RELEVANT_TAG_NAMES = new HashSet<>(asList("param", "return", "type", "typedef", "implements", "extends"));
 
     private static final String CLOSURE_TYPE_ANNOTATION_START = "{";
 
     private static final String CLOSURE_TYPE_ANNOTATION_END = "}";
 
+    private final Map<String, String> fullNamespacesToShortReferences;
+
     /**
      * The passed set will be filled in-place (meaning its contents can change)
      */
-    public CommentDependencyCollector(Set<String> rawTypesInComments) {
+    public CommentDependencyCollector(Set<String> rawTypesInComments, Map<String, String> fullNamespacesToShortReferences) {
         this.rawTypesInComments = rawTypesInComments;
+        this.fullNamespacesToShortReferences = fullNamespacesToShortReferences;
     }
 
     /**
@@ -48,7 +51,7 @@ public class CommentDependencyCollector {
 
             Optional<String> typeReferences = extractClosureTypeReference(tag.getValue());
             typeReferences.ifPresent(reference -> {
-                reference = normalizeNamespace(reference);
+                reference = resolveAndNormalizeNamespace(reference, fullNamespacesToShortReferences);
                 rawTypesInComments.add(reference);
             });
         }
@@ -71,6 +74,6 @@ public class CommentDependencyCollector {
             return Optional.empty();
         }
 
-        return Optional.of(referenceWithBrackets.substring(1, referenceWithBrackets.length() - 1));
+        return Optional.of(referenceWithBrackets.substring(1, referenceWithBrackets.length() - 1).replaceAll("(Array)?(function)?[?!<>()]", ""));
     }
 }
