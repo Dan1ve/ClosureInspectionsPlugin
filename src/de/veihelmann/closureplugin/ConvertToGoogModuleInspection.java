@@ -27,12 +27,10 @@ public class ConvertToGoogModuleInspection extends LocalInspectionTool {
         return "GoogModuleInsteadOfGoogProvide";
     }
 
-
     @NotNull
     @Override
     public PsiElementVisitor buildVisitor(@NotNull final ProblemsHolder problemsHolder, boolean isOnTheFly) {
         return new PsiElementVisitor() {
-
             @Override
             public void visitElement(PsiElement element) {
                 super.visitElement(element);

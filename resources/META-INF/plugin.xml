@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>de.veihelmann.closureplugin</id>
     <name>Inspections for Google™ Closure</name>
-    <version>1.2.0</version>
+    <version>1.3.2</version>
     <vendor email="daniel.veihelmann@gmail.com">Daniel Veihelmann</vendor>
 
     <description><![CDATA[
@@ -13,7 +13,7 @@
     ]]></description>
 
     <change-notes><![CDATA[
-      - New inspection & fix: Swapped type annotation and parameter name after @param in JSDoc comments
+      - Minor improvements for "convert to goog.module" quick-fix
     ]]>
     </change-notes>
 
