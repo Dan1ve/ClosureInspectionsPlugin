@@ -28,14 +28,14 @@ public class ConvertToGoogModuleFix extends LocalQuickFixOnPsiElement {
     @NotNull
     @Override
     public String getText() {
-        return "Convert class to goog.module [beta]";
+        return "Convert class to goog.module";
     }
 
     @Override
     public void invoke(@NotNull Project project, @NotNull PsiFile psiFile, @NotNull PsiElement targetElement, @NotNull PsiElement psiElement1) {
 
         JSCallExpression statement = (JSCallExpression) targetElement;
-        // TODO (DV) Handle multiple goog.provides in same file
+
         String providedNamespace = statement.getText().substring(statement.getText().indexOf("'")).replaceAll("[\"';)]", "");
         PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
         Document document = documentManager.getDocument(psiFile);
@@ -52,6 +52,9 @@ public class ConvertToGoogModuleFix extends LocalQuickFixOnPsiElement {
         documentText = documentText.replaceAll(Pattern.quote(providedNamespace + "."), newClassName + ".");
         documentText = documentText.replaceAll(Pattern.quote(providedNamespace + " "), newClassName + " ");
         documentText = documentText.replaceAll(Pattern.quote(providedNamespace + ")"), newClassName + ")");
+        documentText = documentText.replaceAll(Pattern.quote("(" + providedNamespace + ","), "(" + newClassName + ",");
+        documentText = documentText.replaceAll(Pattern.quote("new " + providedNamespace + "("), "new " + newClassName + "(");
+        documentText = documentText.replaceAll("^" + Pattern.quote(providedNamespace + ";"), newClassName + ";");
 
         documentText = documentText.replace("class " + providedNamespace, "class " + newClassName);
         documentText = documentText.replace(newClassName + " = class ", "class " + newClassName + " ");
